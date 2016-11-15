@@ -1,24 +1,22 @@
 #ifndef _N_Network
 #define _N_Network
 
+using namespace std;
+
 #include <vector>
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
-
-using namespace std;
-
-
-typedef std::vector<double> t_vals;
-
+//training class
 #include <fstream>
 #include <sstream>
 
-#include "./training.cpp"
+typedef std::vector<double> value_Container; //vector meant for data of type == input
 
+#include "./training.cpp" //must be formatted like this
+typedef vector<Connection> Connections; //
 
-typedef vector<Connection> Connections;
 
 class node;
 typedef vector<node> Layer;
@@ -26,32 +24,33 @@ typedef vector<node> Layer;
 class node{
 public:
 
-	node(unsigned outputQuantity, unsigned _selfIndex);
+node(unsigned outputQuantity, unsigned _selfIndex);
 	inline void setOutputValue(double value) { _outputValue = value; }
 	inline double getOutputValue(void) const { return _outputValue; }
-	void feedForward(const Layer &previousLayer);
-	void calculateOutputGradients(double targetValues);
-	void calculateHiddenGradients(const Layer &nextLayer);
-	void updateInputWeights(Layer &previousLayer);
+	       void feedForward(const Layer &previousLayer);
+				 void calculateOutputGradients(double targetValues);
+				 void calculateHiddenGradients(const Layer &nextLayer);
+				 void updateInputWeights(Layer &previousLayer);
 
 private:
-	static double eta; //Net Learning Rate [0.0 --> 1.0] 0-slow learning, .2-moderate, 1.0-reckless
-	static double alpha; //multiplier to weight change (momentum) [0.0 --> n] 0-no momentum, .5-moderate momentum
 	static double transferFunction(double x);
-
 	static double transferFunctionDerivative(double x);
 	static double randomWeight(void) { return ( rand() / double(RAND_MAX) ); }
-	double sumDOW(const Layer &nextLayer) const;
+	       double sumDOW(const Layer &nextLayer) const;
 
-	double _outputValue;
-	Connections _outputWeights;
-	unsigned _selfIndex;
-	double _gradient;
+	static double eta; //Net Learning Rate [0.0 --> 1.0] 0-slow learning, .2-moderate, 1.0-reckless
+	static double alpha; //multiplier to weight change (momentum) [0.0 --> n] 0-no momentum, .5-moderate momentum
+
+
+	       double      _outputValue;
+				 Connections _outputWeights;
+				 unsigned    _selfIndex;
+				 double      _gradient;
 
 };
 
 double node::eta = 0.15; //learning rate
-double node::alpha = 0.5; //momentum
+double node::alpha = 0.2; //momentum
 
 
 node::node(unsigned outputQuantity, unsigned selfIndex)
@@ -122,9 +121,11 @@ class network{
 
 public:
 	network(const vector<unsigned> &topology);
-	void feedForward(const t_vals &inputValues);
-	void feedBack(t_vals &targetValues);
-	void analyzeFeedback(t_vals &resultValues) const;
+	void feedForward(const value_Container &inputValues);
+	void feedBack(value_Container &targetValues);
+	void analyzeFeedback(value_Container &resultValues) const;
+// create node based on last test run, take in vector input data, modify, and return specified output
+	//void createChildNode(value_Container)
 public: // error
   double getError(void) const { return _error; }
   double getRecentAverageError(void) const { return _recentAverageError; }
@@ -170,14 +171,14 @@ network::network(const vector<unsigned> &topology)
 	}
 }
 
-void network::analyzeFeedback(t_vals &resultValues) const {
+void network::analyzeFeedback(value_Container &resultValues) const {
 	resultValues.clear();
 	for(unsigned n=0; n < _layers.back().size() - 1; ++n){
 		resultValues.push_back(_layers.back()[n].getOutputValue());
 	}
 }
 
-void network::feedBack(t_vals &targetValues){
+void network::feedBack(value_Container &targetValues){
 	//Calculate total net error (RMS of output node errors)
 		Layer &outputLayer= _layers.back();
 		_error = 0.0;
@@ -218,7 +219,7 @@ void network::feedBack(t_vals &targetValues){
 	}
 }
 
-void network::feedForward(const t_vals &inputValues){
+void network::feedForward(const value_Container &inputValues){
 	assert(inputValues.size() == _layers[0].size() - 1); //assert error handling for inputs==number of nodes -1 bias node
 
 	//assign(latch) input values into input nodes

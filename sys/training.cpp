@@ -9,8 +9,8 @@ public:
     void getTopology(std::vector<unsigned> &topology);
 
     // Returns the number of input values read from the file:
-    unsigned getNextInputs(t_vals &inputVals);
-    unsigned getTargetOutputs(t_vals &targetOutputVals);
+    unsigned getNextInputs(value_Container &inputVals);
+    unsigned getTargetOutputs(value_Container &targetOutputVals);
 
 private:
     std::ifstream m_trainingDataFile;
@@ -42,7 +42,7 @@ TrainingData::TrainingData(const std::string filename)
     m_trainingDataFile.open(filename.c_str());
 }
 
-unsigned TrainingData::getNextInputs(t_vals &inputVals)
+unsigned TrainingData::getNextInputs(value_Container &inputVals)
 {
     inputVals.clear();
 
@@ -63,7 +63,7 @@ unsigned TrainingData::getNextInputs(t_vals &inputVals)
     return inputVals.size();
 }
 
-unsigned TrainingData::getTargetOutputs(t_vals &targetOutputVals)
+unsigned TrainingData::getTargetOutputs(value_Container &targetOutputVals)
 {
     targetOutputVals.clear();
 
