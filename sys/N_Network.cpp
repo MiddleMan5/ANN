@@ -11,7 +11,7 @@ using namespace std;
 //training class
 #include <fstream>
 #include <sstream>
-
+#include <Windows.h>
 typedef std::vector<double> value_Container; //vector meant for data of type == input
 
 #include "./training.cpp" //must be formatted like this
@@ -49,8 +49,8 @@ private:
 
 };
 
-double node::eta = 0.15; //learning rate
-double node::alpha = 0.2; //momentum
+double node::eta = 0.2; //learning rate
+double node::alpha = 0.3; //momentum
 
 
 node::node(unsigned outputQuantity, unsigned selfIndex)

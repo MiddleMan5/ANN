@@ -1,6 +1,4 @@
 #include "./sys/N_Network.cpp"
-#include <exception>
-#include <Windows.h>
 
 void gotoxy ( int column, int line ){
   COORD coord;
@@ -21,11 +19,15 @@ void showVectorVals(string label, value_Container &v){
 
   }
 
+int parse_digit(char digit) {
+    return digit - '0';
+}
+
 int main(){
-    TrainingData trainData("./TrainingDataGenerator/out_xor.txt");
+    TrainingData trainData("./TrainingDataGenerator/func.txt");
 
     // e.g., { 3, 2, 1 }
-    cout<<"XOR Neural Network Training Program" << endl;
+    cout<<"Neural Network Training Program" << endl;
     vector<unsigned> topology;
     trainData.getTopology(topology);
 
@@ -61,7 +63,7 @@ int main(){
         cout << "Net recent average error: " << xor_net.getRecentAverageError() << endl;
         gotoxy(0,1);
 
-        if (trainingPass > 100 && xor_net.getRecentAverageError() < 0.005)
+        if (trainingPass > 10000 && xor_net.getRecentAverageError() < 0.0005)
         {
             cout << endl << "average error acceptable -> break" << endl;
             break;
@@ -76,7 +78,7 @@ int main(){
         cout << "TEST" << endl;
         cout << endl;
 
-        unsigned dblarr_test[4][2] = { {0,0}, {0,1}, {1,0}, {1,1} };
+        double dblarr_test[4][2] = { {1,3}, {1,1}, {2,3}, {1,4} };
 
         for (unsigned i = 0; i < 4; ++i)
         {
@@ -91,11 +93,33 @@ int main(){
             showVectorVals("Outputs:", resultValues);
 
             //display rounded output values for viability
-            cout<<"Rounded: ";
-            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(round(resultValues[i])) << " ";
+            cout<<"Normalized: ";
+            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
             cout << endl << endl;
         }
 
         cout << "/TEST" << endl;
+
+        while(true){
+          cout << endl << "Enter X: "<<endl;
+          char xin;
+          cin >> xin;
+          cout << "Enter Y: "<< endl;
+          char yin;
+          cin >> yin;
+
+          double xin_t = (double)(parse_digit(xin));
+          double yin_t = (double)(parse_digit(yin));
+
+          inputValues.clear();
+          inputValues.push_back(xin_t);
+          inputValues.push_back(yin_t);
+
+          xor_net.feedForward(inputValues);
+          xor_net.analyzeFeedback(resultValues);
+
+          cout << "X Squared + Y Squared = ";
+            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
+        }
     }
 }
