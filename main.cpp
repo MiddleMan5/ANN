@@ -23,9 +23,23 @@ int parse_digit(char digit) {
     return digit - '0';
 }
 
-int main(){
-    TrainingData trainData("./TrainingDataGenerator/func.txt");
+int logError (int pass, double error, bool clear=FALSE) {
+  ofstream errorLog;
+if(clear){ errorLog.open("./Python/errorLog.csv", std::ofstream::out | std::ofstream::trunc); errorLog.close(); }
+  else {
+    errorLog.open ("./Python/errorLog.csv", ios::app);
+    errorLog << pass << "," << error << "\n";
+    cout.flush();
+    errorLog.close();
+    return 0;
+  }
+}
 
+int main(){
+
+    TrainingData trainData("./TrainingDataGenerator/trainingData_OUT.txt");
+    logError(0,0,TRUE);
+    ShellExecute(NULL, NULL, "python","./Python/errorGraph.py",NULL,SW_HIDE);
     // e.g., { 3, 2, 1 }
     cout<<"Neural Network Training Program" << endl;
     vector<unsigned> topology;
@@ -62,6 +76,7 @@ int main(){
         cout << "Net current error: " << xor_net.getError() << endl;
         cout << "Net recent average error: " << xor_net.getRecentAverageError() << endl;
         gotoxy(0,1);
+        logError(trainingPass, xor_net.getRecentAverageError());
 
         if (trainingPass > 10000 && xor_net.getRecentAverageError() < 0.0005)
         {
@@ -78,7 +93,7 @@ int main(){
         cout << "TEST" << endl;
         cout << endl;
 
-        double dblarr_test[4][2] = { {1,3}, {1,1}, {2,3}, {1,4} };
+        double dblarr_test[4][2] = { {.01,.03}, {.01,.01}, {.02,.03}, {.01,.04} };
 
         for (unsigned i = 0; i < 4; ++i)
         {
@@ -112,14 +127,14 @@ int main(){
           double yin_t = (double)(parse_digit(yin));
 
           inputValues.clear();
-          inputValues.push_back(xin_t);
-          inputValues.push_back(yin_t);
+          inputValues.push_back(xin_t/100);
+          inputValues.push_back(yin_t/100);
 
           xor_net.feedForward(inputValues);
           xor_net.analyzeFeedback(resultValues);
 
-          cout << "X Squared + Y Squared = ";
-            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
+          cout << xin_t << " Squared + " <<yin_t<<" Squared = ";
+            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i])*100 << " ";
         }
     }
 }

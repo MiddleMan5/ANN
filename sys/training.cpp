@@ -1,6 +1,11 @@
 #ifndef _training
 #define _training
 
+//training class
+#include <fstream>
+#include <sstream>
+#include <Windows.h>
+
 class TrainingData
 {
 public:

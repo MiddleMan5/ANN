@@ -7,9 +7,8 @@
 
 int main()
 {
- // CreateFile("func.txt",GENERIC_WRITE,FILE_SHARE_READ, NULL, CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-std::ofstream file;
-file.open("func.txt");
+ofstream file;
+file.open("trainingData_OUT.txt");
 
 	file << "topology: 4 6 6" << std::endl;
 	for (int i = 10000; i >= 0; --i)
@@ -21,8 +20,8 @@ file.open("func.txt");
 
 	//	int t = !n1 ^ !n2; // should be 0 xor 1
 
-		file << "in: " << x << " " << y << std::endl;
-		file << "out: " << z  << std::endl;
+		file << "in: " << x/100 << " " << y/100 << std::endl;
+		file << "out: " << z/100  << std::endl;
 	}
 	file.close();
 	return(1);

@@ -8,10 +8,6 @@ using namespace std;
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
-//training class
-#include <fstream>
-#include <sstream>
-#include <Windows.h>
 typedef std::vector<double> value_Container; //vector meant for data of type == input
 
 #include "./training.cpp" //must be formatted like this
@@ -50,7 +46,7 @@ private:
 };
 
 double node::eta = 0.2; //learning rate
-double node::alpha = 0.3; //momentum
+double node::alpha = 0.2; //momentum
 
 
 node::node(unsigned outputQuantity, unsigned selfIndex)
@@ -138,7 +134,7 @@ private:
 
 };
 
-double network::_recentAverageSmoothingFactor = 100.0; // Number of training samples to average over
+double network::_recentAverageSmoothingFactor = 1000.0; // Number of training samples to average over
 
 network::network(const vector<unsigned> &topology)
 		:_error(0.0),
@@ -167,7 +163,7 @@ network::network(const vector<unsigned> &topology)
 			// else cout<<"Bias node: ["<<i<<","<<j<<"] created."<<endl;
 		}
 		node &biasNode = newLayer.back();
-		biasNode.setOutputValue(1.0); //set bias node to constant output of 1.0
+		biasNode.setOutputValue(.5); //set bias node to constant output
 	}
 }
 
