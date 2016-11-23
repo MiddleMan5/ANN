@@ -56,14 +56,19 @@ ofstream file;
 	file << "topology: " << _i << " " << _j << " "<< _k << std::endl;
 	for (int i = 10000; i >= 0; --i){
 
-		int iNumX = 5 - rand() % 10;
-		int iNumY = 5 - rand() % 10;
+		int iNumX = 70 - rand() % 140;
+		int iNumY = 70 - rand() % 140;
 
 		float iNumZ = ((iNumX*iNumX)+(iNumY*iNumY));
 
-		file << "in: " << iNumX << " " << iNumY << endl;
-		file << "out: "<< iNumZ << endl;
+		file << "in: " << (double)iNumX/10000 << " " << (double)iNumY/10000;
+		//stream_digits(file, iNumX);
+		file<<endl;
+		//stream_digits(file, iNumY);
+		file << "out: ";
+		//stream_digits(file, iNumZ, "0.");
+		file<<iNumZ/10000<<endl;
 	}
 	file.close();
-	return(0);
+	return(1);
 }

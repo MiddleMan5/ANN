@@ -13,7 +13,7 @@ void gotoxy ( int column, int line ){
 void showVectorVals(string label, value_Container &v){
     cout << label << " ";
     for (unsigned i = 0; i < v.size(); ++i)
-        cout << v[i] << " ";
+        cout << 1000*v[i] << " ";
 
     cout << endl;
 
@@ -93,7 +93,7 @@ int main(){
         cout << "TEST" << endl;
         cout << endl;
 
-        double dblarr_test[4][2] = { {0,3}, {1,1}, {2,3}, {1,4} };
+        double dblarr_test[4][2] = { {0,.003}, {.001,.001}, {.002,.003}, {.001,.004} };
 
         for (unsigned i = 0; i < 4; ++i)
         {
@@ -127,14 +127,14 @@ int main(){
           double yin_t = (double)(parse_digit(yin));
 
           inputValues.clear();
-          inputValues.push_back(xin_t);
-          inputValues.push_back(yin_t);
+          inputValues.push_back(xin_t/1000);
+          inputValues.push_back(yin_t/1000);
 
           xor_net.feedForward(inputValues);
           xor_net.analyzeFeedback(resultValues);
 
           cout << xin_t << " Squared + " <<yin_t<<" Squared = ";
-            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
+            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i])*1000 << " ";
         }
     }
 }
