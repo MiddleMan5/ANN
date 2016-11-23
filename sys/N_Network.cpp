@@ -32,10 +32,14 @@ private:
 	static double transferFunction(double x);
 	static double transferFunctionDerivative(double x);
 	static double randomWeight(void) { return ( rand() / double(RAND_MAX) ); }
-	       double sumDOW(const Layer &nextLayer) const;
+	       double sumDOW(const Layer &nextLayer);
 
 	static double eta; //Net Learning Rate [0.0 --> 1.0] 0-slow learning, .2-moderate, 1.0-reckless
 	static double alpha; //multiplier to weight change (momentum) [0.0 --> n] 0-no momentum, .5-moderate momentum
+	static int    timeStep;
+	static double decreaseConstant;
+	double long   weightTotal;
+	static double hyperConstant;
 
 
 	       double      _outputValue;
@@ -45,9 +49,12 @@ private:
 
 };
 
-double node::eta = 0.2; //learning rate
-double node::alpha = 0.2; //momentum
+double node::eta = .1; //learning rate
+double node::alpha = .5; //momentum
+int    node::timeStep=0;
+double node::decreaseConstant=0;
 
+double node::hyperConstant = 1000;
 
 node::node(unsigned outputQuantity, unsigned selfIndex)
 	: _selfIndex(selfIndex)
@@ -59,27 +66,39 @@ node::node(unsigned outputQuantity, unsigned selfIndex)
 }
 
 void node::updateInputWeights(Layer &previousLayer){
-	for(unsigned n=0; n < previousLayer.size(); n++){
-		node &node = previousLayer[n];
-		double deltaWeightOld = node._outputWeights[_selfIndex].deltaWeight;
 
-		double deltaWeightNew = eta * node.getOutputValue() * _gradient
+	for(unsigned n=0; n < previousLayer.size(); n++){
+		timeStep+=1;
+		node &nodeOld = previousLayer[n];
+
+		double deltaWeightOld = nodeOld._outputWeights[_selfIndex].deltaWeight;
+		double deltaWeightNew = eta * nodeOld.getOutputValue() * _gradient
 					//add momentum as fraction of previous delta weight
 					+ alpha
 					* deltaWeightOld;
 
-			node._outputWeights[_selfIndex].deltaWeight = deltaWeightNew;
-			node._outputWeights[_selfIndex].weight += deltaWeightNew;
+			nodeOld._outputWeights[_selfIndex].deltaWeight = deltaWeightNew;
+			nodeOld._outputWeights[_selfIndex].weight += deltaWeightNew;
 	}
 }
 
-double node::sumDOW(const Layer &nextLayer) const{
+double node::sumDOW(const Layer &nextLayer){
 	double sum = 0.0;
-
+  weightTotal = 0.0;
 	for(unsigned n=0; n < nextLayer.size() - 1; ++n){
 		sum += _outputWeights[n].weight * nextLayer[n]._gradient;
+		weightTotal+=hyperConstant*_outputWeights[n].weight;
 	}
-	return sum;
+	return (sum);
+}
+
+void node::feedForward(const Layer &previousLayer){
+	double sum = 0.0;
+
+	for(unsigned n=0; n < previousLayer.size()-1; ++n){
+		sum += previousLayer[n].getOutputValue() * previousLayer[n]._outputWeights[_selfIndex].weight;
+	}
+		_outputValue = node::transferFunction(sum);
 }
 
 void node::calculateHiddenGradients(const Layer &nextLayer){
@@ -94,21 +113,17 @@ void node::calculateOutputGradients(double targetValues){
 
 double node::transferFunctionDerivative(double x){
 	//tanh derivative
-	return (1.0 - x * x);
+	//return 510*(1-(tanh(x)*tanh(x)));
+return (1/(1+abs(x)*abs(x)));
+	//return 1.14393*(1-(tanh(2*x/3)*tanh(2*x/3)));
+
 }
 
 double node::transferFunction(double x){
 	//tanh - output(-1.0 --> 1.0)
-	return tanh(x);
-}
-
-void node::feedForward(const Layer &previousLayer){
-	double sum = 0.0;
-
-	for(unsigned n=0; n < previousLayer.size(); ++n){
-		sum += previousLayer[n].getOutputValue() * previousLayer[n]._outputWeights[_selfIndex].weight;
-	}
-		_outputValue = node::transferFunction(sum);
+	//return 510*tanh(x);
+return (x/(1 + abs(x)));
+	//return 1.7159*tanh(2/3*x);
 }
 
 typedef vector<node> Layer;
@@ -133,8 +148,6 @@ private:
 	static double _recentAverageSmoothingFactor;
 
 };
-
-double network::_recentAverageSmoothingFactor = 1000.0; // Number of training samples to average over
 
 network::network(const vector<unsigned> &topology)
 		:_error(0.0),
@@ -163,7 +176,7 @@ network::network(const vector<unsigned> &topology)
 			// else cout<<"Bias node: ["<<i<<","<<j<<"] created."<<endl;
 		}
 		node &biasNode = newLayer.back();
-		biasNode.setOutputValue(.5); //set bias node to constant output
+		biasNode.setOutputValue(1); //set bias node to constant output
 	}
 }
 
@@ -173,6 +186,8 @@ void network::analyzeFeedback(value_Container &resultValues) const {
 		resultValues.push_back(_layers.back()[n].getOutputValue());
 	}
 }
+
+double network::_recentAverageSmoothingFactor = 100.0; // Number of training samples to average over
 
 void network::feedBack(value_Container &targetValues){
 	//Calculate total net error (RMS of output node errors)
@@ -204,6 +219,7 @@ void network::feedBack(value_Container &targetValues){
 	for(unsigned n=0; n < hiddenLayer.size(); ++n)
 		hiddenLayer[n].calculateHiddenGradients(nextLayer);
 	}
+
 	//Update connection weights from output to first hidden layer
 	for(unsigned layerID = _layers.size() - 1; layerID > 0; --layerID){
 		Layer &currentLayer = _layers[layerID];

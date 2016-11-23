@@ -7,7 +7,7 @@ void gotoxy ( int column, int line ){
   SetConsoleCursorPosition(
     GetStdHandle( STD_OUTPUT_HANDLE ),
     coord
-    );
+  );
 }
 
 void showVectorVals(string label, value_Container &v){
@@ -25,9 +25,9 @@ int parse_digit(char digit) {
 
 int logError (int pass, double error, bool clear=FALSE) {
   ofstream errorLog;
-if(clear){ errorLog.open("./Python/errorLog.csv", std::ofstream::out | std::ofstream::trunc); errorLog.close(); }
+if(clear){ errorLog.open("./Graphing/errorLog.csv", std::ofstream::trunc); errorLog.close(); }
   else {
-    errorLog.open ("./Python/errorLog.csv", ios::app);
+    errorLog.open ("./Graphing/errorLog.csv", ios::app);
     errorLog << pass << "," << error << "\n";
     cout.flush();
     errorLog.close();
@@ -39,8 +39,8 @@ int main(){
 
     TrainingData trainData("./TrainingDataGenerator/trainingData_OUT.txt");
     logError(0,0,TRUE);
-    ShellExecute(NULL, NULL, "python","./Python/errorGraph.py",NULL,SW_HIDE);
-    // e.g., { 3, 2, 1 }
+    ShellExecute(NULL, NULL, "python","./Graphing/errorGraph.py",NULL,SW_HIDE);
+
     cout<<"Neural Network Training Program" << endl;
     vector<unsigned> topology;
     trainData.getTopology(topology);
@@ -78,7 +78,7 @@ int main(){
         gotoxy(0,1);
         logError(trainingPass, xor_net.getRecentAverageError());
 
-        if (trainingPass > 10000 && xor_net.getRecentAverageError() < 0.0005)
+        if (trainingPass > 1000 && xor_net.getRecentAverageError() < 0.005)
         {
             cout << endl << "average error acceptable -> break" << endl;
             break;
@@ -93,7 +93,7 @@ int main(){
         cout << "TEST" << endl;
         cout << endl;
 
-        double dblarr_test[4][2] = { {.01,.03}, {.01,.01}, {.02,.03}, {.01,.04} };
+        double dblarr_test[4][2] = { {0,3}, {1,1}, {2,3}, {1,4} };
 
         for (unsigned i = 0; i < 4; ++i)
         {
@@ -108,9 +108,9 @@ int main(){
             showVectorVals("Outputs:", resultValues);
 
             //display rounded output values for viability
-            cout<<"Normalized: ";
-            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
-            cout << endl << endl;
+            // cout<<"Normalized: ";
+            // for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
+            // cout << endl << endl;
         }
 
         cout << "/TEST" << endl;
@@ -127,14 +127,14 @@ int main(){
           double yin_t = (double)(parse_digit(yin));
 
           inputValues.clear();
-          inputValues.push_back(xin_t/100);
-          inputValues.push_back(yin_t/100);
+          inputValues.push_back(xin_t);
+          inputValues.push_back(yin_t);
 
           xor_net.feedForward(inputValues);
           xor_net.analyzeFeedback(resultValues);
 
           cout << xin_t << " Squared + " <<yin_t<<" Squared = ";
-            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i])*100 << " ";
+            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i]) << " ";
         }
     }
 }
