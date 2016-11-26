@@ -8,7 +8,6 @@
 int main()
 {
 	// Random training set for XOR -- two input and one output
-
 	std::cout << "topology: 2 4 1" << std::endl;
 	for (int i = 5000; i >= 0; --i)
 	{

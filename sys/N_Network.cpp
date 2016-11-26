@@ -1,3 +1,10 @@
+/*Classes and Methods largely based on: https://github.com/GuillaumeBouchetEpitech/NeuralNetwork_experiment/blob/master/src/main.cpp
+----------------------------------------------------------------------------------------------------
+	Created by Quinn Mikelson, inspired by references:
+		Vinh Nguyen, Neural Net in C++; https://www.youtube.com/watch?v=KkwX7FkLfug
+		https://github.com/GuillaumeBouchetEpitech and his project https://github.com/GuillaumeBouchetEpitech/NeuralNetwork_experiment
+*/
+
 #ifndef _N_Network
 #define _N_Network
 
