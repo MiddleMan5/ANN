@@ -9,7 +9,7 @@
 class TrainingData
 {
 public:
-    TrainingData(const std::string filename);
+    TrainingData(const std::string filename, double normFactor);
     bool isEof(void) { return m_trainingDataFile.eof(); }
     void getTopology(std::vector<unsigned> &topology);
 
@@ -19,6 +19,7 @@ public:
 
 private:
     std::ifstream m_trainingDataFile;
+    double _normFactor;
 };
 
 void TrainingData::getTopology(std::vector<unsigned> &topology)
@@ -42,9 +43,10 @@ void TrainingData::getTopology(std::vector<unsigned> &topology)
     return;
 }
 
-TrainingData::TrainingData(const std::string filename)
+TrainingData::TrainingData(const std::string filename, double normFactor)
 {
     m_trainingDataFile.open(filename.c_str());
+    _normFactor = normFactor;
 }
 
 unsigned TrainingData::getNextInputs(value_Container &inputVals)
@@ -62,7 +64,7 @@ unsigned TrainingData::getNextInputs(value_Container &inputVals)
         double oneValue;
 
         while (ss >> oneValue)
-            inputVals.push_back(oneValue);
+            inputVals.push_back(oneValue/_normFactor);
     }
 
     return inputVals.size();
@@ -83,7 +85,7 @@ unsigned TrainingData::getTargetOutputs(value_Container &targetOutputVals)
         double oneValue;
 
         while (ss >> oneValue)
-            targetOutputVals.push_back(oneValue);
+            targetOutputVals.push_back(oneValue/_normFactor);
     }
 
     return targetOutputVals.size();

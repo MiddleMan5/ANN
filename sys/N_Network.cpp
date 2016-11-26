@@ -3,11 +3,14 @@
 
 using namespace std;
 
+double normFactor = 1000;
+
 #include <vector>
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
+#include <time.h>
 typedef std::vector<double> value_Container; //vector meant for data of type == input
 
 #include "./training.cpp" //must be formatted like this
@@ -27,11 +30,12 @@ node(unsigned outputQuantity, unsigned _selfIndex);
 				 void calculateOutputGradients(double targetValues);
 				 void calculateHiddenGradients(const Layer &nextLayer);
 				 void updateInputWeights(Layer &previousLayer);
+				 double getGradient(void) const {return _gradient; }
 
 private:
 	static double transferFunction(double x);
 	static double transferFunctionDerivative(double x);
-	static double randomWeight(void) { return ( rand() / double(RAND_MAX) ); }
+	static double randomWeight(void) { return .5*( rand() / double(RAND_MAX) ); }
 	       double sumDOW(const Layer &nextLayer);
 
 	static double eta; //Net Learning Rate [0.0 --> 1.0] 0-slow learning, .2-moderate, 1.0-reckless
@@ -40,8 +44,7 @@ private:
 	static double decreaseConstant;
 	double long weightTotal;
 	static double hyperConstant;
-
-
+	static double theta;
 	       double      _outputValue;
 				 Connections _outputWeights;
 				 unsigned    _selfIndex;
@@ -49,12 +52,47 @@ private:
 
 };
 
-double node::eta = .002; //learning rate
+double node::eta = .4; //learning rate
 double node::alpha = .6; //momentum
 int    node::timeStep=0;
 double node::decreaseConstant=0;
+double node::theta=0;
+double node::hyperConstant = 1;
 
-double node::hyperConstant = 100;
+void gotoxy ( int column, int line ){
+  COORD coord;
+  coord.X = column;
+  coord.Y = line;
+  SetConsoleCursorPosition(
+    GetStdHandle( STD_OUTPUT_HANDLE ),
+    coord
+  );
+}
+
+void showVectorVals(string label, value_Container &v){
+    cout << label << " ";
+    for (unsigned i = 0; i < v.size(); ++i)
+        cout << normFactor*v[i] << " ";
+
+    cout << endl;
+
+  }
+
+int parse_digit(char digit) {
+    return digit - '0';
+}
+
+int logData (int pass,double gradient, double error, bool clear=FALSE) {
+  ofstream dataLog;
+if(clear){ dataLog.open("./Graphing/dataLog.csv", std::ofstream::trunc); dataLog.close(); }
+  else {
+    dataLog.open ("./Graphing/dataLog.csv", ios::app);
+    dataLog << pass << "," << gradient << "," << error << "\n";
+    cout.flush();
+    dataLog.close();
+    return 0;
+  }
+}
 
 node::node(unsigned outputQuantity, unsigned selfIndex)
 	: _selfIndex(selfIndex)
@@ -66,16 +104,15 @@ node::node(unsigned outputQuantity, unsigned selfIndex)
 }
 
 void node::updateInputWeights(Layer &previousLayer){
-
+timeStep+=1;
 	for(unsigned n=0; n < previousLayer.size(); n++){
-		timeStep+=1;
-		node &node = previousLayer[n];
 
+		node &node = previousLayer[n];
+		eta = eta;
 		double deltaWeightOld = node._outputWeights[_selfIndex].deltaWeight;
-		double deltaWeightNew = eta * node.getOutputValue() * _gradient
+		double deltaWeightNew = eta *node.getOutputValue() * _gradient
 					//add momentum as fraction of previous delta weight
-					+ alpha
-					* deltaWeightOld;
+					+ alpha * deltaWeightOld;
 
 			node._outputWeights[_selfIndex].deltaWeight = deltaWeightNew;
 			node._outputWeights[_selfIndex].weight += deltaWeightNew;
@@ -89,7 +126,7 @@ double node::sumDOW(const Layer &nextLayer){
 		sum += _outputWeights[n].weight * nextLayer[n]._gradient;
 		weightTotal+=hyperConstant*_outputWeights[n].weight;
 	}
-	return (sum+(weightTotal*weightTotal)/2);
+	return (sum);
 }
 
 void node::feedForward(const Layer &previousLayer){
@@ -102,31 +139,23 @@ void node::feedForward(const Layer &previousLayer){
 }
 
 void node::calculateHiddenGradients(const Layer &nextLayer){
-	double dow= sumDOW(nextLayer);
-	_gradient = dow * node::transferFunctionDerivative(_outputValue)
-	;
+	double dow = sumDOW(nextLayer);
+	_gradient = dow * node::transferFunctionDerivative(_outputValue);
 }
 
 void node::calculateOutputGradients(double targetValues){
-	double delta = targetValues - _outputValue;
+	double delta = (targetValues - _outputValue);//*(1+(timeStep*hyperConstant));
 	_gradient = delta * node::transferFunctionDerivative(_outputValue);
-}
-
-double node::transferFunctionDerivative(double x){
-	//tanh derivative
-	//return (1-(tanh(x)*tanh(x)));
-	return 1/(1+abs(x)*abs(x));
-	//return 1;
-	//return 1.14393*(1-(tanh(2*x/3)*tanh(2*x/3)));
-
 }
 
 double node::transferFunction(double x){
 	//tanh - output(-1.0 --> 1.0)
-	//return tanh(x);
-	return x/(1 + abs(x));
-	//return x;
-	//return 1.7159*tanh(2/3*x);
+	return tanh(x);
+}
+
+double node::transferFunctionDerivative(double x){
+	//tanh derivative
+return (1-(tanh(x)*tanh(x)));
 }
 
 typedef vector<node> Layer;
@@ -143,13 +172,14 @@ public:
 public: // error
   double getError(void) const { return _error; }
   double getRecentAverageError(void) const { return _recentAverageError; }
+	double getSumOutputGradient(void) const {return _sumOutputGradient; }
 
 private:
 	vector<Layer> _layers; //_layers[layerID][nodeID]
 	double _error;
 	double _recentAverageError;
 	static double _recentAverageSmoothingFactor;
-
+	double _sumOutputGradient;
 };
 
 network::network(const vector<unsigned> &topology)
@@ -158,7 +188,7 @@ network::network(const vector<unsigned> &topology)
 {
 
 	assert( !topology.empty() );
-
+	srand(time(NULL));
 	unsigned stackSize = topology.size();
 
 	for(unsigned i = 0; i < stackSize; ++i){
@@ -190,7 +220,7 @@ void network::analyzeFeedback(value_Container &resultValues) const {
 	}
 }
 
-double network::_recentAverageSmoothingFactor = 100.0; // Number of training samples to average over
+double network::_recentAverageSmoothingFactor = 200.0; // Number of training samples to average over
 
 void network::feedBack(value_Container &targetValues){
 	//Calculate total net error (RMS of output node errors)
@@ -207,20 +237,19 @@ void network::feedBack(value_Container &targetValues){
 	//implement recent average measurement
 	_recentAverageError = (_recentAverageError * _recentAverageSmoothingFactor + _error)
 												/ (_recentAverageSmoothingFactor + 1.0);
-
 	//Calculate output layer gradient
-
+_sumOutputGradient = 0;
 	for(unsigned n=0; n < outputLayer.size() - 1; ++n){
 		outputLayer[n].calculateOutputGradients(targetValues[n]);
-
+	_sumOutputGradient += outputLayer[n].getGradient();
 	}
 	//Calculate hidden layer gradient
 	for(unsigned i = _layers.size() - 2; i > 0; --i){
 		Layer &hiddenLayer = _layers[i];
 		Layer &nextLayer = _layers[i + 1];
 
-	for(unsigned n=0; n < hiddenLayer.size(); ++n)
-		hiddenLayer[n].calculateHiddenGradients(nextLayer);
+	for(unsigned a=0; a < hiddenLayer.size(); ++a)
+		hiddenLayer[a].calculateHiddenGradients(nextLayer);
 	}
 
 	//Update connection weights from output to first hidden layer
