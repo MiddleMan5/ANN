@@ -4,7 +4,6 @@
 		Vinh Nguyen, Neural Net in C++; https://www.youtube.com/watch?v=KkwX7FkLfug
 		https://github.com/GuillaumeBouchetEpitech and his project https://github.com/GuillaumeBouchetEpitech/NeuralNetwork_experiment
 */
-
 #include <Windows.h>
 #include <iostream>
 #include <cmath>
@@ -12,7 +11,7 @@
 #include <fstream>
 #include <time.h>
 #include <vector>
-
+#include <random>
 
 /* ----------------Edits----------------
 + ANN now handles normFactor, plan to generate a header of input values to the ANN
@@ -22,40 +21,41 @@
 */
 
 using namespace std;
-int maxVal = 50; //whole number interger, random value will be between -maxVal to maxVal;
-
-//int normFactor; //maximum value of the preprogrammed function with given maxVal
-//ANN Now handles normFactor
-
-//Create a ANN of two inputs(inputX, inputY), 1 hiddenLayer of 10 nodes, and 1 output (inputZ)
-string topology = "2 10 1";
+int maxVal = 70; //whole number interger, random value will be between -maxVal to maxVal;
+int normFactor = maxVal*2; //maximum value of the preprogrammed function with given maxVal
+string topology = "( 2 10 1 )"; //Create a ANN of two inputs(inputX, inputY), 1 hiddenLayer of 10 nodes, and 1 output (inputZ)
+int iterations = 10000;
+//Generate Header data for ANN input
+void createHeader(std::ostream& header, std::string _topology, int _normFactor, int _iterations){
+	header << "HEADER[ " << "topology" << _topology << " " << normFactor << " " << _iterations << " ]" << endl;
+}
 
 int main(){
 
-//create new file (Wipe existing contents) for Training Data
-ofstream file;
-file.open("trainingData_OUT.txt");
+	std::random_device randGen; //creates an object to generate psuedo-random numbers; from <random>
+	std::mt19937 gen(randGen());
+	//create new file (Wipe existing contents) for Training Data
+	ofstream file;
+	file.open("trainingData_OUT.txt");
+	createHeader(file, topology, normFactor, iterations);
 
-//Seed rand() function with time()
-srand(time(NULL));
-
-//Generate Header data for ANN input
-file << "topology: " << topology << " " << std::endl;
-
-//--------------**arbitrary** ---------------
-// function generator for ANN training
-	for (int i = 100000; i >= 0; --i){
-		//Generate whole intergers for ANN testing between +- given maxVal
-				int inputX = maxVal - rand() % maxVal * 2;//MODULO BIAS!!! Replace with even distribution function
-				int inputY = maxVal - rand() % maxVal * 2;
-
-		//Create output for two inputs
-				int inputZ = (inputX)+(inputY);
-				file << "in: " << inputX << " " << inputY << endl << "out: " << inputZ << endl;
-	}
-file.close();
-return(1);
+	//--------------**arbitrary** ---------------
+	// function generator for ANN training
+	//Generate whole intergers for ANN testing between +- given maxVal
+	std::uniform_int_distribution<> dis(-maxVal, maxVal);
+		for (int i = iterations; i >= 0; --i){
+			int inputX = dis(gen);
+			int inputY = dis(gen);
+			//Create output for two inputs
+					int inputZ = (inputX)+(inputY);
+					file << "in: " << inputX << " " << inputY << endl << "out: " << inputZ << endl;
+		}
+	file.close();
+	return(1);
 }
+
+
+
 
 //Outdated method for parsing normalized intergers, replaced with normFactor
 //Ripped from StackOverflow discussion here: http://stackoverflow.com/a/4616084
