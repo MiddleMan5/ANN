@@ -8,8 +8,6 @@
 #ifndef _N_Network
 #define _N_Network
 
-using namespace std;
-
 double normFactor = 1000;
 
 #include <vector>
@@ -18,14 +16,16 @@ double normFactor = 1000;
 #include <cassert>
 #include <cmath>
 #include <time.h>
-typedef std::vector<double> value_Container; //vector meant for data of type == input
+#include <tchar.h>
+#include <random>
 
-#include "./training.cpp" //must be formatted like this
-typedef vector<Connection> Connections; //
+typedef std::vector<double> value_Container; //std::vector meant for data of type == input
+#include "./training.cpp" //must be formatted between typedefs
+typedef std::vector<Connection> Connections; //
 
 
 class node;
-typedef vector<node> Layer;
+typedef std::vector<node> Layer;
 
 class node{
 public:
@@ -42,7 +42,7 @@ node(unsigned outputQuantity, unsigned _selfIndex);
 private:
 	static double transferFunction(double x);
 	static double transferFunctionDerivative(double x);
-	static double randomWeight(void) { return .5*( rand() / double(RAND_MAX) ); }
+	static double randomWeight(double maxVal=1, double minVal=-1);
 	       double sumDOW(const Layer &nextLayer);
 
 	static double eta; //Net Learning Rate [0.0 --> 1.0] 0-slow learning, .2-moderate, 1.0-reckless
@@ -66,41 +66,6 @@ double node::decreaseConstant=0;
 double node::theta=0;
 double node::hyperConstant = 1;
 
-void gotoxy ( int column, int line ){
-  COORD coord;
-  coord.X = column;
-  coord.Y = line;
-  SetConsoleCursorPosition(
-    GetStdHandle( STD_OUTPUT_HANDLE ),
-    coord
-  );
-}
-
-void showVectorVals(string label, value_Container &v){
-    cout << label << " ";
-    for (unsigned i = 0; i < v.size(); ++i)
-        cout << normFactor*v[i] << " ";
-
-    cout << endl;
-
-  }
-
-int parse_digit(char digit) {
-    return digit - '0';
-}
-
-int logData (int pass,double gradient, double error, bool clear=FALSE) {
-  ofstream dataLog;
-if(clear){ dataLog.open("./Graphing/dataLog.csv", std::ofstream::trunc); dataLog.close(); }
-  else {
-    dataLog.open ("./Graphing/dataLog.csv", ios::app);
-    dataLog << pass << "," << gradient << "," << error << "\n";
-    cout.flush();
-    dataLog.close();
-    return 0;
-  }
-}
-
 node::node(unsigned outputQuantity, unsigned selfIndex)
 	: _selfIndex(selfIndex)
 {
@@ -108,6 +73,13 @@ node::node(unsigned outputQuantity, unsigned selfIndex)
 		_outputWeights.push_back(Connection());
 		_outputWeights.back().weight = randomWeight(); //eventually replace connetion as a class with constructor to assign random weight
 	}
+}
+
+double node::randomWeight(double maxVal, double minVal){
+  std::uniform_real_distribution<double> unif(minVal, maxVal);
+	static std::random_device randGen; //creates an object to generate psuedo-random numbers; from <random>
+	static std::mt19937 gen(randGen());
+	return unif(gen);
 }
 
 void node::updateInputWeights(Layer &previousLayer){
@@ -165,16 +137,16 @@ double node::transferFunctionDerivative(double x){
 return (1-(tanh(x)*tanh(x)));
 }
 
-typedef vector<node> Layer;
+typedef std::vector<node> Layer;
 
 class network{
 
 public:
-	network(const vector<unsigned> &topology);
+	network(const std::vector<unsigned> &topology);
 	void feedForward(const value_Container &inputValues);
 	void feedBack(value_Container &targetValues);
 	void analyzeFeedback(value_Container &resultValues) const;
-// create node based on last test run, take in vector input data, modify, and return specified output
+// create node based on last test run, take in std::vector input data, modify, and return specified output
 	//void createChildNode(value_Container)
 public: // error
   double getError(void) const { return _error; }
@@ -182,14 +154,14 @@ public: // error
 	double getSumOutputGradient(void) const {return _sumOutputGradient; }
 
 private:
-	vector<Layer> _layers; //_layers[layerID][nodeID]
+	std::vector<Layer> _layers; //_layers[layerID][nodeID]
 	double _error;
 	double _recentAverageError;
 	static double _recentAverageSmoothingFactor;
 	double _sumOutputGradient;
 };
 
-network::network(const vector<unsigned> &topology)
+network::network(const std::vector<unsigned> &topology)
 		:_error(0.0),
 		 _recentAverageError(0.0)
 {
@@ -212,8 +184,8 @@ network::network(const vector<unsigned> &topology)
 
 		for(unsigned j = 0; j < (nodeQuantity + 1); ++j){ //add specified number of nodes +1 bias node
 			newLayer.push_back( node(outputQuantity, j) );
-			// if(i!=topology[i])cout<<"node: ["<<i<<","<<j<<"] created"<<endl;
-			// else cout<<"Bias node: ["<<i<<","<<j<<"] created."<<endl;
+			// if(i!=topology[i])std::cout<<"node: ["<<i<<","<<j<<"] created"<<std::endl;
+			// else std::cout<<"Bias node: ["<<i<<","<<j<<"] created."<<std::endl;
 		}
 		node &biasNode = newLayer.back();
 		biasNode.setOutputValue(1); //set bias node to constant output
@@ -287,7 +259,81 @@ void network::feedForward(const value_Container &inputValues){
 	}
 }
 
+// -------------------------------------------------------------------------
+//------------------Misc-Global-Methods----------------------------------
+//--------------------------------------------------------------------------
+void gotoxy ( int column, int line ){
+  COORD coord;
+  coord.X = column;
+  coord.Y = line;
+  SetConsoleCursorPosition(
+    GetStdHandle( STD_OUTPUT_HANDLE ),
+    coord
+  );
+}
+
+void showVectorVals(std::string label, value_Container &v){
+    std::cout << label << " ";
+    for (unsigned i = 0; i < v.size(); ++i)
+        std::cout << normFactor*v[i] << " ";
+
+    std::cout << std::endl;
+
+  }
+
+int parse_digit(char digit) {
+    return digit - '0';
+}
+
+int logData (int pass,double gradient, double error, bool clear=FALSE) {
+  std::ofstream dataLog;
+if(clear){ dataLog.open("./Graphing/dataLog.csv", std::ofstream::trunc); dataLog.close(); }
+  else {
+    dataLog.open ("./Graphing/dataLog.csv", std::ios::app);
+    dataLog << pass << "," << gradient << "," << error << "\n";
+    std::cout.flush();
+    dataLog.close();
+    return 0;
+  }
+}
 
 
+void processHandler(bool run=1){
+  //Taken from example here: https://www.codeproject.com/Articles/1842/A-newbie-s-elementary-guide-to-spawning-processes
+	//Additional info found here: http://stackoverflow.com/questions/1135784/createprocess-doesnt-pass-command-line-arguments
+	//and here http://stackoverflow.com/a/42543
+
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    char argv[]="\"python.exe\" Graphing\\dataGraph.py";
+    ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );
+
+    // Start the child process.
+    if( !CreateProcess( NULL,   // No module name (use command line)
+        argv,        // Command line
+        NULL,           // Process handle not inheritable
+        NULL,           // Thread handle not inheritable
+        FALSE,          // Set handle inheritance to FALSE
+        0,              // No creation flags
+        NULL,           // Use parent's environment block
+        NULL,           // Use parent's starting directory
+        &si,            // Pointer to STARTUPINFO structure
+        &pi )           // Pointer to PROCESS_INFORMATION structure
+    )
+    {
+        printf( "CreateProcess failed (%d).\n", GetLastError() );
+        return;
+    }
+
+    // Wait until child process exits.
+  //  WaitForSingleObject( pi.hProcess, INFINITE );
+if(run){
+    // Close process and thread handles.
+    CloseHandle( pi.hProcess );
+    CloseHandle( pi.hThread );
+	}
+}
 
 #endif

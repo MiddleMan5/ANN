@@ -11,10 +11,11 @@ int main(){
 
     TrainingData trainData("./TrainingDataGenerator/trainingData_OUT.txt",normFactor);
     logData(0,0,0,TRUE);
-    ShellExecute(NULL, NULL, "python","./Graphing/dataGraph.py",NULL,SW_HIDE);
+    //ShellExecute(NULL, NULL, "python","./Graphing/dataGraph.py",NULL,SW_HIDE);
+    processHandler();
 
-    cout<<"Neural Network Training Program" << endl;
-    vector<unsigned> topology;
+    std::cout<<"Neural Network Training Program" << std::endl;
+    std::vector<unsigned> topology;
     trainData.getTopology(topology);
 
     network xor_net(topology);
@@ -24,7 +25,7 @@ int main(){
 
     while (!trainData.isEof()){
         ++trainingPass;
-        cout << endl << "Pass " << trainingPass << endl;
+        std::cout << std::endl << "Pass " << trainingPass << std::endl;
 
         // Get new input data and feed it forward:
         if (trainData.getNextInputs(inputValues) != topology[0])
@@ -45,26 +46,26 @@ int main(){
         xor_net.feedBack(targetValues);
 
         // Report how well the training is working, average over recent samples:
-        cout << "Current error: " << normFactor * xor_net.getError() << endl;
-        cout << "Average error: " << normFactor * xor_net.getRecentAverageError() << endl;
-        //cout << "Percent error: " << normFactor * ??????? << endl;
+        std::cout << "Current error: " << normFactor * xor_net.getError() << std::endl;
+        std::cout << "Average error: " << normFactor * xor_net.getRecentAverageError() << std::endl;
+        //std::cout << "Percent error: " << normFactor * ??????? << std::endl;
         gotoxy(0,1);
         logData(trainingPass, xor_net.getSumOutputGradient(), xor_net.getRecentAverageError());
 
-        if (trainingPass > 1000 && xor_net.getRecentAverageError() < .1/normFactor)
+        if (trainingPass > 1000 && xor_net.getRecentAverageError() < .02/normFactor)
         {
-            cout << endl << "Average Error Within Defined Acceptable Range -------> break" << endl;
+            std::cout << std::endl << "Average Error Within Defined Acceptable Range -------> break" << std::endl;
             break;
         }
     }
     gotoxy(0,8);
-    cout << endl << "Done" << endl << endl;
+    std::cout << std::endl << "Done" << std::endl << std::endl;
 
 
     if (topology[0] == 2)
     {
-        cout << "TEST" << endl;
-        cout << endl;
+        std::cout << "TEST" << std::endl;
+        std::cout << std::endl;
 
         double dblarr_test[8][2] = { {0/normFactor,3/normFactor}, {1/normFactor,1/normFactor}, {20/normFactor,16/normFactor}, {5/normFactor,2/normFactor},
                                      {0/normFactor,0/normFactor}, {81/normFactor,59/normFactor}, {20/normFactor,20/normFactor}, {32/normFactor,11/normFactor} };
@@ -82,15 +83,15 @@ int main(){
             showVectorVals("Outputs:", resultValues);
         }
 
-        cout << "/TEST" << endl;
+        std::cout << "/TEST" << std::endl;
 
         while(true){
-          cout << endl << "Enter X: "<<endl;
+          std::cout << std::endl << "Enter X: "<<std::endl;
           char xin;
-          cin >> xin;
-          cout << "Enter Y: "<< endl;
+          std::cin >> xin;
+          std::cout << "Enter Y: "<< std::endl;
           char yin;
-          cin >> yin;
+          std::cin >> yin;
 
           double xin_t = (double)(parse_digit(xin));
           double yin_t = (double)(parse_digit(yin));
@@ -102,8 +103,8 @@ int main(){
           xor_net.feedForward(inputValues);
           xor_net.analyzeFeedback(resultValues);
 
-          cout << xin_t << " Squared + " <<yin_t<<" Squared = ";
-            for (unsigned i = 0; i < resultValues.size(); ++i)cout << abs(resultValues[i])*normFactor << " ";
+          std::cout << xin_t << " + " <<yin_t<<" = ";
+            for (unsigned i = 0; i < resultValues.size(); ++i)std::cout << abs(resultValues[i])*normFactor << " ";
         }
     }
 }
